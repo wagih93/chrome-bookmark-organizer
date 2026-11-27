@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Local Bookmark Organizer</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">PRIVATE · LOCAL · REVIEW FIRST</p>
+          <h1>Bookmark Organizer</h1>
+          <p class="subtitle">Group favorites and flag clutter with your local LLM.</p>
+        </div>
+        <div class="header-status">
+          <span id="jobBadge" class="badge neutral">Idle</span>
+          <span id="connectionBadge" class="badge neutral">Not connected</span>
+        </div>
+      </header>
+
+      <section class="settings panel">
+        <details>
+          <summary>Local LLM settings</summary>
+          <div class="settings-grid">
+            <label>
+              Server preset
+              <select id="serverPresetInput">
+                <option value="custom">Custom endpoint</option>
+                <option value="lmstudio">LM Studio — localhost:1234/v1</option>
+                <option value="llamacpp">llama.cpp — localhost:8080/v1</option>
+              </select>
+              <span class="hint">Presets configure the URL; custom local ports remain supported.</span>
+            </label>
+            <label>
+              API base URL
+              <input id="endpointInput" type="url" value="http://localhost:1234/v1">
+              <span class="hint">Any localhost or 127.0.0.1 port is accepted. Include /v1.</span>
+            </label>
+            <label>
+              Model
+              <input id="modelInput" type="text" placeholder="Auto-detect first loaded model">
+              <span class="hint">Leave blank to use the first model returned by the server.</span>
+            </label>
+          </div>
+          <div class="inline-actions">
+            <button id="testButton" class="secondary" type="button">Test connection</button>
+            <button id="saveSettingsButton" class="secondary" type="button">Save settings</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="privacy-note">
+        <strong>Local-only.</strong> Titles, URLs, and existing folder names are sent to the configured
+        local endpoint. Bookmark pages are never opened or fetched.
+      </section>
+
+      <section class="toolbar panel">
+        <div class="toolbar-main">
+          <button id="analyzeButton" class="primary" type="button">
+            Analyze bookmarks
+          </button>
+          <button id="undoButton" class="secondary" type="button" disabled>
+            Undo last changes
+          </button>
+          <button id="cancelButton" class="secondary" type="button" hidden>Stop analysis</button>
+        </div>
+        <div class="toolbar-options">
+          <label class="deletion-control">
+            <input id="allowDeletionInput" type="checkbox">
+            Allow deletions (optional)
+          </label>
+          <label class="batch-control">
+            Batch size
+            <select id="batchSizeInput">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+            <span class="hint">10 is recommended</span>
+          </label>
+        </div>
+      </section>
+
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+      <div id="progressRow" class="progress-row" hidden>
+        <progress id="progress" max="100" value="0"></progress>
+        <span id="progressLabel">0%</span>
+      </div>
+      <p id="backgroundHint" class="background-hint" hidden>
+        Analysis is continuing in the extension background. You can safely close this popup and reopen it later.
+      </p>
+
+      <section id="activityPanel" class="activity-panel panel">
+        <div class="activity-heading">
+          <div>
+            <strong>Activity log</strong>
+            <span class="activity-subtitle">Operational steps only; model chain-of-thought is not exposed.</span>
+          </div>
+          <div class="activity-actions">
+            <button id="copyLogButton" class="text-button" type="button">Copy</button>
+            <button id="clearLogButton" class="text-button" type="button">Clear</button>
+          </div>
+        </div>
+        <ol id="activityLog" class="activity-log" aria-live="polite">
+          <li class="log-empty">No activity yet. Start an analysis to see each step.</li>
+        </ol>
+      </section>
+
+      <section id="emptyState" class="empty">
+        <div class="empty-icon">✦</div>
+        <h2>Ready for a local review</h2>
+        <p>Start analysis to receive a safe, editable plan. Nothing changes until you apply it.</p>
+      </section>
+
+      <section id="results" hidden>
+        <div class="summary">
+          <div><strong id="totalCount">0</strong><span>Total</span></div>
+          <div><strong id="keepCount">0</strong><span>Keep</span></div>
+          <div><strong id="moveCount">0</strong><span>Organize</span></div>
+          <div><strong id="deleteCount">0</strong><span>Remove</span></div>
+        </div>
+
+        <div class="result-toolbar">
+          <label class="search-box">
+            <span>Filter</span>
+            <input id="filterInput" type="search" placeholder="Search title, URL, folder, or reason">
+          </label>
+          <label>
+            <input id="selectAllInput" type="checkbox" checked>
+            Select all visible
+          </label>
+        </div>
+
+        <div id="planList" class="plan-list"></div>
+
+        <footer class="apply-panel">
+          <label id="deleteConsentLabel" class="consent" hidden>
+            <input id="deleteConsentInput" type="checkbox">
+            I reviewed the selected removals and want to delete those bookmarks.
+          </label>
+          <div class="apply-row">
+            <span id="selectionSummary">0 changes selected</span>
+            <button id="applyButton" class="danger" type="button" disabled>Apply selected changes</button>
+          </div>
+        </footer>
+      </section>
+    </main>
+
+    <template id="planItemTemplate">
+      <article class="plan-item">
+        <label class="plan-select">
+          <input class="action-checkbox" type="checkbox">
+          <span class="sr-only">Select bookmark change</span>
+        </label>
+        <div class="plan-content">
+          <div class="plan-heading">
+            <a class="bookmark-link" target="_blank" rel="noreferrer"></a>
+            <span class="action-badge"></span>
+          </div>
+          <div class="plan-path"></div>
+          <div class="plan-reason"></div>
+          <div class="plan-meta"></div>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

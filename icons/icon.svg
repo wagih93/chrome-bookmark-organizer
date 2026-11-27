@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">Local Bookmark Organizer icon</title>
+  <defs>
+    <linearGradient id="background" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#312e81"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="28" fill="url(#background)"/>
+  <path d="M38 27h38c7 0 12 5 12 12v63L69 89l-19 13V94H38c-5 0-9-4-9-9V36c0-5 4-9 9-9Z" fill="#fff"/>
+  <rect x="44" y="43" width="29" height="7" rx="3.5" fill="#4f46e5"/>
+  <rect x="44" y="59" width="21" height="7" rx="3.5" fill="#818cf8"/>
+  <circle cx="91" cy="89" r="19" fill="#a7f3d0"/>
+  <path d="m81.5 89 6 6 13-14" fill="none" stroke="#065f46" stroke-linecap="round" stroke-linejoin="round" stroke-width="7"/>
+</svg>
